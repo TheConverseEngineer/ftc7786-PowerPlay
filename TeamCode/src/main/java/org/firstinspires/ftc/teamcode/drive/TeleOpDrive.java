@@ -1,23 +1,27 @@
 package org.firstinspires.ftc.teamcode.drive;
 
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.command.Subsystem;
 
+// TODO - Add field centric drive
 public class TeleOpDrive implements Subsystem {
 
     DcMotor leftFront, rightFront, leftRear, rightRear;
 
+    double heading;
 
-    public TeleOpDrive(DcMotor leftFront, DcMotor rightFront, DcMotor leftRear, DcMotor rightRear) {
+    public TeleOpDrive(DcMotor leftFront, DcMotor rightFront, DcMotor leftRear, DcMotor rightRear, double heading) {
         this.leftFront = leftFront;
         this.rightFront = rightFront;
         this.leftRear = leftRear;
         this.rightRear = rightRear;
+        this.heading = heading;
     }
 
     /** Method to set drivetrain velocity using a joystick (just feed values directly)
-     * Will automatically deal with inverted motors
+     * Will automatically deal with inverted controls
      *
      * @param x     the gamepad x value
      * @param y     the gamepad y value
@@ -53,6 +57,11 @@ public class TeleOpDrive implements Subsystem {
 
     @Override
     public void periodic() {
+        heading += (leftFront.getCurrentPosition() - rightRear.getCurrentPosition()) / (DriveConstants.TRACK_DIAMETER * DriveConstants.TICKS_PER_INCH);
+    }
 
+    @Override
+    public void simPeriodic(TelemetryPacket packet) {
+        packet.put("heading", heading);
     }
 }

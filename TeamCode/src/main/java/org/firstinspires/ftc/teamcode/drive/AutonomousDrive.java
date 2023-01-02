@@ -3,15 +3,14 @@ package org.firstinspires.ftc.teamcode.drive;
 import androidx.annotation.Nullable;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-import com.acmerobotics.roadrunner.drive.Drive;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.util.NanoClock;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.command.Command;
 import org.firstinspires.ftc.teamcode.command.Subsystem;
+import org.firstinspires.ftc.teamcode.utils.DashboardUtils;
 import org.firstinspires.ftc.teamcode.utils.MutablePose2d;
 
 public class AutonomousDrive implements Subsystem {
@@ -24,6 +23,7 @@ public class AutonomousDrive implements Subsystem {
 
     private final NanoClock timer;
     private double timerOffset;
+    private double voltage = 12;
 
     @Nullable
     private TrajectorySequence currentSequence;
@@ -107,13 +107,20 @@ public class AutonomousDrive implements Subsystem {
         };
     }
 
-    private void setNewFollowTrajectory(TrajectorySequence sequence) {
+    /** This method is public for specific internal purposes
+     * DO NOT USE THIS METHOD
+     *
+     * use followTrajectoryCommand instead
+     */
+    public void setNewFollowTrajectory(TrajectorySequence sequence) {
         timerOffset = timer.seconds();
         currentSequence = sequence;
     }
 
     @Override
     public void periodic() {
+        voltage = voltageSensor.getVoltage();
+
         // Update Odometry
         double dl = getLeftEncoderDelta() / DriveConstants.TICKS_PER_INCH;
         double dr = getRightEncoderDelta() / DriveConstants.TICKS_PER_INCH;
@@ -170,13 +177,19 @@ public class AutonomousDrive implements Subsystem {
         if (currentSequence != null) {
             double time = timer.seconds();
             Pose2d target = currentSequence.get(time - timerOffset);
-            packet.fieldOverlay().fillCircle(target.getX(), target.getY(), 5);
-            packet.fieldOverlay().fillCircle(target.getX() + 7*Math.cos(target.getHeading()),
-                    target.getY() + 7*Math.sin(target.getHeading()),
-                    2);
-            packet.put("heading", target.getHeading());
-            packet.put("time", time);
+
+            // Draw target pose
+            DashboardUtils.drawRobot(target, "green", packet.fieldOverlay());
+            packet.put("target y velocity", currentSequence.velocity(time - timerOffset).getY());
+
+            // Log error
+            packet.put("y error", target.getY() - pose.y);
+            packet.put("x error", target.getX() - pose.x);
+            packet.put("heading error", target.getHeading() - pose.theta);
         }
+
+        // Draw robot
+        DashboardUtils.drawRobot(pose, "blue", packet.fieldOverlay());
     }
 
     /** Returns a trajectory builder instance */
@@ -235,8 +248,8 @@ public class AutonomousDrive implements Subsystem {
     /** Applies the feedforward controller. kS, kV, and kA can b found in DriveConstants */
     private double feedforward(double v, double a) {
         // Sacrificing readability for execution speed, hence the ternary operators
-        return DriveConstants.kS * ((v > -0.0001 && v < 0.0001) ? 0 : (v > 0) ? 1 : -1) +
-                DriveConstants.kV * v + DriveConstants.kA * a;
+        return (DriveConstants.kS * ((v > -0.0001 && v < 0.0001) ? 0 : (v > 0) ? 1 : -1) +
+                DriveConstants.kV * v + DriveConstants.kA * a) / voltage;
     }
 
 
