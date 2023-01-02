@@ -30,6 +30,8 @@ public abstract class CommandOpMode extends LinearOpMode {
         gamepad1.copy(_gamepad1);
         gamepad2.copy(_gamepad2);
 
+        start(master);
+
         while (opModeIsActive() && !isStopRequested()) {
             for (LynxModule hub : allHubs) hub.clearBulkCache();
             loop(master);
@@ -59,6 +61,11 @@ public abstract class CommandOpMode extends LinearOpMode {
     /** Can be used to add on-OpMode-end behaviors.
      * AVOID BLOCKING LOOPS LIKE THE PLAGUE! */
     public void end() {
+
+    }
+
+    /** Can be used to add behaviors when start is pressed */
+    public void start(CommandScheduler master) {
 
     }
 }
