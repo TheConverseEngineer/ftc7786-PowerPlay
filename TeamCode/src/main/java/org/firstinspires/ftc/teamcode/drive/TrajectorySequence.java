@@ -65,13 +65,13 @@ public class TrajectorySequence {
                     velocityConstraint, accelerationConstraint, DriveConstants.PROFILE_RESOLUTION);
         }
 
-        public Builder splineToSplineHeading(Pose2d pos, double splineHeading) {
-            internalBuilder.splineToSplineHeading(pos, splineHeading);
+        public Builder splineToSplineHeading(Pose2d pose, double splineHeading) {
+            internalBuilder.splineToSplineHeading(pose, splineHeading);
             return this;
         }
 
-        public Builder splineToLinearHeading(Pose2d pos, double splineHeading) {
-            internalBuilder.splineToLinearHeading(pos, splineHeading);
+        public Builder splineToLinearHeading(Pose2d pose, double splineHeading) {
+            internalBuilder.splineToLinearHeading(pose, splineHeading);
             return this;
         }
 
