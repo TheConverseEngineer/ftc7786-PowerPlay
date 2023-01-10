@@ -36,4 +36,6 @@ public class LiftStateManager {
     public double getA() {
         return 0;
     }
+
+
 }
