@@ -1,42 +1,22 @@
-package org.firstinspires.ftc.teamcode.susbsystems;
+package org.firstinspires.ftc.teamcode.profile;
 
-import com.qualcomm.robotcore.util.ElapsedTime;
+import org.firstinspires.ftc.teamcode.susbsystems.ArmConstants;
 
-public class LiftStateManager {
+/**
+ * Copied from FTCLIB/WPILIB
+ */
+public class TrapezoidalProfile {
+    // The direction of the profile, either 1 for forwards or -1 for inverted
+    private final int directionMultiplier;
 
-    private int directionMultiplier;
+    private final State initialState;
+    private final State goalState;
 
-    private State initialState;
-    private State goalState;
+    private final double endAccelTime;
+    private final double endFullSpeedTime;
+    private final double endDeccelTime;
 
-    private double endAccelTime;
-    private double endFullSpeedTime;
-    private double endDeccelTime;
-
-    private final ElapsedTime timer;
-
-    public LiftStateManager(double startPosition) {
-        endAccelTime = -1;
-        endFullSpeedTime = -1;
-        endDeccelTime = -1;
-        timer = new ElapsedTime();
-        initialState = new State(startPosition, 0);
-        goalState = new State(startPosition, 0);
-    }
-
-    public void setNewTarget(double newPos) {
-        State current = this.calculate(timer.seconds());
-        this.setNewTarget(newPos, current.position, current.velocity);
-    }
-
-    public double getMotorPower(double currentPosition) {
-        State target = this.calculate(timer.seconds());
-        return ArmConstants.ELEVATOR_kStatic +
-                ArmConstants.ELEVATOR_kV * target.velocity +
-                ArmConstants.ELEVATOR_P * (target.position - currentPosition);
-    }
-
-    /** Small utility class representing a state */
+    /** Small data class representing a state */
     public static class State {
         public double position;
         public double velocity;
@@ -45,19 +25,10 @@ public class LiftStateManager {
             this.position = position;
             this.velocity = velocity;
         }
-
     }
 
-    /** Inverts a state if needed (reflexive normalization function) */
-    private State direct(State in) {
-        return new State(
-                in.position * directionMultiplier,
-                in.velocity * directionMultiplier
-        );
-    }
-
-    /** Creates a new trapezoidal profile to move to the new target position */
-    private void setNewTarget(double targetPosition, double currentPosition, double currentVelocity) {
+    /** Construct a TrapezoidProfile given a target position, current position, and current velocity */
+    public TrapezoidalProfile(double targetPosition, double currentPosition, double currentVelocity) {
         directionMultiplier = (currentPosition > targetPosition) ? -1 : 1;
         initialState = direct(new State(currentPosition, currentVelocity));
         goalState = direct(new State(targetPosition, 0.0));
@@ -88,7 +59,13 @@ public class LiftStateManager {
         endDeccelTime = endFullSpeedTime + accelerationTime;
     }
 
-    private State calculate(double t) {
+    /**
+     * Calculate the correct position and velocity for the profile at a time t
+     * where the beginning of the profile was at time t = 0.
+     *
+     * @param t The time since the beginning of the profile.
+     */
+    public State calculate(double t) {
         State result = new State(initialState.position, initialState.velocity);
 
         if (t < endAccelTime) {
@@ -108,5 +85,17 @@ public class LiftStateManager {
         }
 
         return direct(result);
+    }
+    
+    public boolean hasStoppedMoving(double t) {
+        return t >= endDeccelTime;
+    }
+
+    // Flip the sign of the velocity and position if the profile is inverted
+    private State direct(State in) {
+        return new State(
+                in.position * directionMultiplier,
+                in.velocity * directionMultiplier
+        );
     }
 }
