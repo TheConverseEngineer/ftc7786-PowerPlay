@@ -24,5 +24,9 @@ public class MutablePose2d {
             this.y += dx*(b*c - a*d) + dy*(b*d + a*c);
         }
         this.theta += dTheta;
+
+        // Wrap angle
+        while (this.theta <= -180) this.theta += 360;
+        while (this.theta > 180) this.theta -= 360;
     }
 }
