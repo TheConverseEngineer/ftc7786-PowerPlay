@@ -19,7 +19,7 @@ import org.firstinspires.ftc.teamcode.virtual.VirtualVoltageSensor;
 
 @TeleOp(name = "Follower Tuner", group = "tuning")
 public class FollowerTuner extends LinearOpMode {
-    public static final double DISTANCE = 80; // Will move 80 inches FORWARD ONLY
+    public static final double DISTANCE = 80; // Will move 80 inches FORWARD AND BACKWARDS
     DcMotorEx lf, rf, lr, rr;
     VoltageSensor voltage;
     AutonomousDrive drive;

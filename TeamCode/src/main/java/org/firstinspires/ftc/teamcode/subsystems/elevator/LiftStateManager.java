@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.susbsystems;
+package org.firstinspires.ftc.teamcode.subsystems.elevator;
 
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -14,26 +14,30 @@ public class LiftStateManager {
     private double endDeccelTime;
 
     private final ElapsedTime timer;
+    private double resetTime;
 
     public LiftStateManager(double startPosition) {
         endAccelTime = -1;
         endFullSpeedTime = -1;
         endDeccelTime = -1;
         timer = new ElapsedTime();
+        timer.reset();
+        resetTime = 0;
         initialState = new State(startPosition, 0);
         goalState = new State(startPosition, 0);
     }
 
     public void setNewTarget(double newPos) {
-        State current = this.calculate(timer.seconds());
+        resetTime = timer.seconds();
+        State current = this.calculate(resetTime);
         this.setNewTarget(newPos, current.position, current.velocity);
     }
 
     public double getMotorPower(double currentPosition) {
-        State target = this.calculate(timer.seconds());
-        return ArmConstants.ELEVATOR_kStatic +
-                ArmConstants.ELEVATOR_kV * target.velocity +
-                ArmConstants.ELEVATOR_P * (target.position - currentPosition);
+        State target = this.calculate(timer.seconds() - resetTime);
+        return ElevatorConstants.ELEVATOR_kStatic +
+                ElevatorConstants.ELEVATOR_kV * target.velocity +
+                ElevatorConstants.ELEVATOR_P * (target.position - currentPosition);
     }
 
     /** Small utility class representing a state */
@@ -62,29 +66,29 @@ public class LiftStateManager {
         initialState = direct(new State(currentPosition, currentVelocity));
         goalState = direct(new State(targetPosition, 0.0));
 
-        initialState.velocity = Math.min(ArmConstants.ELEVATOR_MAX_V, initialState.velocity);
+        initialState.velocity = Math.min(ElevatorConstants.ELEVATOR_MAX_V, initialState.velocity);
 
 
         // Deal with a non-zero initial velocity
-        double cutoffBegin = initialState.velocity / ArmConstants.ELEVATOR_MAX_A;
-        double cutoffDistBegin = cutoffBegin * cutoffBegin * ArmConstants.ELEVATOR_MAX_A / 2.0;
+        double cutoffBegin = initialState.velocity / ElevatorConstants.ELEVATOR_MAX_A;
+        double cutoffDistBegin = cutoffBegin * cutoffBegin * ElevatorConstants.ELEVATOR_MAX_A / 2.0;
 
         // Now we can calculate the parameters as if it was a full trapezoid instead
         // of a truncated one
 
         double fullTrapezoidDist = cutoffDistBegin + (goalState.position - initialState.position);
-        double accelerationTime = ArmConstants.ELEVATOR_MAX_V / ArmConstants.ELEVATOR_MAX_A;
+        double accelerationTime = ElevatorConstants.ELEVATOR_MAX_V / ElevatorConstants.ELEVATOR_MAX_A;
 
-        double fullSpeedDist = fullTrapezoidDist - accelerationTime * accelerationTime * ArmConstants.ELEVATOR_MAX_A;
+        double fullSpeedDist = fullTrapezoidDist - accelerationTime * accelerationTime * ElevatorConstants.ELEVATOR_MAX_A;
 
         // Handle a degenerate profile
         if (fullSpeedDist < 0) {
-            accelerationTime = Math.sqrt(fullTrapezoidDist / ArmConstants.ELEVATOR_MAX_A);
+            accelerationTime = Math.sqrt(fullTrapezoidDist / ElevatorConstants.ELEVATOR_MAX_A);
             fullSpeedDist = 0;
         }
 
         endAccelTime = accelerationTime - cutoffBegin;
-        endFullSpeedTime = endAccelTime + fullSpeedDist / ArmConstants.ELEVATOR_MAX_A;
+        endFullSpeedTime = endAccelTime + fullSpeedDist / ElevatorConstants.ELEVATOR_MAX_A;
         endDeccelTime = endFullSpeedTime + accelerationTime;
     }
 
@@ -92,17 +96,17 @@ public class LiftStateManager {
         State result = new State(initialState.position, initialState.velocity);
 
         if (t < endAccelTime) {
-            result.velocity += t * ArmConstants.ELEVATOR_MAX_A;
-            result.position += (initialState.velocity + t * ArmConstants.ELEVATOR_MAX_A / 2.0) * t;
+            result.velocity += t * ElevatorConstants.ELEVATOR_MAX_A;
+            result.position += (initialState.velocity + t * ElevatorConstants.ELEVATOR_MAX_A / 2.0) * t;
         } else if (t < endFullSpeedTime) {
-            result.velocity = ArmConstants.ELEVATOR_MAX_V;
-            result.position += (initialState.velocity + endAccelTime * ArmConstants.ELEVATOR_MAX_A
-                    / 2.0) * endAccelTime + ArmConstants.ELEVATOR_MAX_V * (t - endAccelTime);
+            result.velocity = ElevatorConstants.ELEVATOR_MAX_V;
+            result.position += (initialState.velocity + endAccelTime * ElevatorConstants.ELEVATOR_MAX_A
+                    / 2.0) * endAccelTime + ElevatorConstants.ELEVATOR_MAX_V * (t - endAccelTime);
         } else if (t <= endDeccelTime) {
-            result.velocity = goalState.velocity + (endDeccelTime - t) * ArmConstants.ELEVATOR_MAX_A;
+            result.velocity = goalState.velocity + (endDeccelTime - t) * ElevatorConstants.ELEVATOR_MAX_A;
             double timeLeft = endDeccelTime - t;
             result.position = goalState.position - (goalState.velocity + timeLeft
-                    * ArmConstants.ELEVATOR_MAX_A / 2.0) * timeLeft;
+                    * ElevatorConstants.ELEVATOR_MAX_A / 2.0) * timeLeft;
         } else {
             result = goalState;
         }

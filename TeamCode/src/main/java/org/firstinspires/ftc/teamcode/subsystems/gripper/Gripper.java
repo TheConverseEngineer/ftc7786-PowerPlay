@@ -1,12 +1,11 @@
-package org.firstinspires.ftc.teamcode.susbsystems.gripper;
+package org.firstinspires.ftc.teamcode.subsystems.gripper;
 
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.command.Subsystem;
 
-import static org.firstinspires.ftc.teamcode.susbsystems.gripper.GripperConstants.*;
+import static org.firstinspires.ftc.teamcode.subsystems.gripper.GripperConstants.*;
 
 public class Gripper implements Subsystem {
     Servo leftGripServo, rightGripServo;
