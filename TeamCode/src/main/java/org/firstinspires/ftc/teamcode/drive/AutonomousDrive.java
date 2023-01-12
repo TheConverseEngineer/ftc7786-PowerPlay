@@ -249,7 +249,7 @@ public class AutonomousDrive implements Subsystem {
     private double feedforward(double v, double a) {
         // Sacrificing readability for execution speed, hence the ternary operators
         return (DriveConstants.kS * ((v > -0.0001 && v < 0.0001) ? 0 : (v > 0) ? 1 : -1) +
-                DriveConstants.kV * v + DriveConstants.kA * a) / voltage;
+                DriveConstants.kV * v + DriveConstants.kA * a) * 12 / voltage;
     }
 
 
