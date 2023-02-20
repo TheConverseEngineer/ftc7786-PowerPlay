@@ -99,7 +99,7 @@ public class VirtualDcMotorEx implements DcMotorEx {
 
     @Override
     public double getVelocity() {
-        return this.currentPower * rpm / 60d * cpr;
+        return this.currentPower * (rpm / 60d) * cpr;
     }
 
     @Override
@@ -232,6 +232,7 @@ public class VirtualDcMotorEx implements DcMotorEx {
 
     @Override
     public int getCurrentPosition() {
+        update(this.currentPower);
         return (int) this.currentPosition;
     }
 

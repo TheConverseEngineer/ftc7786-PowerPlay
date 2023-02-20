@@ -1,15 +1,13 @@
 package org.firstinspires.ftc.teamcode.tests;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.command.CommandOpMode;
 import org.firstinspires.ftc.teamcode.command.CommandScheduler;
-import org.firstinspires.ftc.teamcode.command.prefabs.SequentialCommand;
-import org.firstinspires.ftc.teamcode.drive.AutonomousDrive;
-import org.firstinspires.ftc.teamcode.drive.TrajectorySequence;
+import org.firstinspires.ftc.teamcode.archive.drive.AutonomousDrive;
+import org.firstinspires.ftc.teamcode.archive.drive.TrajectorySequence;
 import org.firstinspires.ftc.teamcode.virtual.VirtualDcMotorEx;
 import org.firstinspires.ftc.teamcode.virtual.VirtualVoltageSensor;
 
@@ -24,7 +22,9 @@ public class SequenceTest extends CommandOpMode {
                 VirtualDcMotorEx.createGB312Motor(),
                 VirtualDcMotorEx.createGB312Motor(),
                 VirtualDcMotorEx.createGB312Motor(),
-                VirtualDcMotorEx.createGB312Motor(), new Pose2d(62.39, -45.82, Math.toRadians(180)));
+                VirtualDcMotorEx.createGB312Motor(),
+                VirtualDcMotorEx.createGB312Motor(),
+                new Pose2d(62.39, -45.82, Math.toRadians(180)));
         master.setFTCDashboardStatus(true);
 
 

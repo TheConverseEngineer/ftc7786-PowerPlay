@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.subsystems.elevator;
 
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.utils.MathUtils;
+
 public class LiftStateManager {
 
     private int directionMultiplier;
@@ -15,6 +17,9 @@ public class LiftStateManager {
 
     private final ElapsedTime timer;
     private double resetTime;
+    private double integral;
+    private double lastError;
+    private double lastTime;
 
     public LiftStateManager(double startPosition) {
         endAccelTime = -1;
@@ -23,21 +28,39 @@ public class LiftStateManager {
         timer = new ElapsedTime();
         timer.reset();
         resetTime = 0;
+        lastTime = 0;
+        integral = 0;
+        lastError = 0;
         initialState = new State(startPosition, 0);
         goalState = new State(startPosition, 0);
     }
 
     public void setNewTarget(double newPos) {
+        integral = 0;
         resetTime = timer.seconds();
         State current = this.calculate(resetTime);
         this.setNewTarget(newPos, current.position, current.velocity);
     }
 
     public double getMotorPower(double currentPosition) {
-        State target = this.calculate(timer.seconds() - resetTime);
-        return ElevatorConstants.ELEVATOR_kStatic +
-                ElevatorConstants.ELEVATOR_kV * target.velocity +
-                ElevatorConstants.ELEVATOR_P * (target.position - currentPosition);
+        double time = timer.seconds();
+        State target = this.calculate(time - resetTime);
+        if (target.position < 0.1 && currentPosition < 0.3) return 0;
+        if (lastError * (target.position-currentPosition) <= 0) integral = 0;
+        else integral += (target.position-currentPosition) * (time - lastTime);
+
+        double output = ((target.position > 0.2 && target.velocity >= 0)?ElevatorConstants.ELEVATOR_kStatic:0)
+                + ((target.velocity >= 0) ? ElevatorConstants.ELEVATOR_kV_POSITIVE : ElevatorConstants.ELEVATOR_kV_NEGATIVE) * target.velocity
+                + MathUtils.clamp(ElevatorConstants.ELEVATOR_P * (target.position - currentPosition), -ElevatorConstants.ELEVATOR_MAX_P_VEL, ElevatorConstants.ELEVATOR_MAX_P_VEL)
+                + MathUtils.clamp(ElevatorConstants.ELEVATOR_I * integral, -ElevatorConstants.ELEVATOR_MAX_I, ElevatorConstants.ELEVATOR_MAX_I);
+
+        lastError = target.position - currentPosition;
+        lastTime = time;
+        return MathUtils.clamp(output, -ElevatorConstants.ELEVATOR_MAX_MOTOR_POWER, ElevatorConstants.ELEVATOR_MAX_MOTOR_POWER);
+    }
+
+    public State getTarget() {
+        return this.calculate(timer.seconds() - resetTime);
     }
 
     /** Small utility class representing a state */
@@ -113,6 +136,4 @@ public class LiftStateManager {
 
         return direct(result);
     }
-
-
 }

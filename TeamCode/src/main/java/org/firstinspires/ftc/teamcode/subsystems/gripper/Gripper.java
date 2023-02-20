@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.subsystems.gripper;
 
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.command.Subsystem;
@@ -10,13 +9,10 @@ import static org.firstinspires.ftc.teamcode.subsystems.gripper.GripperConstants
 public class Gripper implements Subsystem {
     Servo leftGripServo, rightGripServo;
 
-    public Gripper(HardwareMap map){
+    public Gripper(Servo left, Servo right){
         //Initialize hardware
-        leftGripServo = map.get(Servo.class, leftGripServoName);
-        rightGripServo = map.get(Servo.class, rightGripServoName);
-        //Set servos to default position
-        leftGripServo.setPosition(leftGripDefaultPos);
-        rightGripServo.setPosition(rightGripDefaultPos);
+        leftGripServo = left;
+        rightGripServo = right;
     }
 
     @Override

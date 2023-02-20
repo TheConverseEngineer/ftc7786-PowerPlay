@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.drive;
+package org.firstinspires.ftc.teamcode.archive.drive;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -63,5 +63,6 @@ public class TeleOpDrive implements Subsystem {
     @Override
     public void simPeriodic(TelemetryPacket packet) {
         packet.put("heading", heading);
+        packet.put("lf power", leftFront.getPower());
     }
 }

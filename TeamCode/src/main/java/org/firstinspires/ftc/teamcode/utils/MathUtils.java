@@ -12,4 +12,10 @@ public class MathUtils {
     public static boolean epsEquals(double a, double b) {
         return Math.abs(a - b) < 0.00001;
     }
+
+    public static double wrap(double x) {
+        while (x < -Math.PI) x+= 2*Math.PI;
+        while (x > Math.PI) x-= 2*Math.PI;
+        return x;
+    }
 }

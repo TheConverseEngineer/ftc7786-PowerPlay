@@ -15,7 +15,7 @@ public class DetectionStatus {
 
     /** Sets the detected position (can only be called once) */
     public void setPosition(ParkPosition pos) {
-        if (!this.mutable) return;
+        // if (!this.mutable) return;
 
         this.pos = pos;
         this.mutable = false;

@@ -1,13 +1,15 @@
 package org.firstinspires.ftc.teamcode.tuning;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.teamcode.command.CommandOpMode;
 import org.firstinspires.ftc.teamcode.command.CommandScheduler;
-import org.firstinspires.ftc.teamcode.drive.TeleOpDrive;
+import org.firstinspires.ftc.teamcode.archive.drive.TeleOpDrive;
 
+@Disabled
 @TeleOp(name = "Drive Test", group = "default")
 public class TeleOpDriveTest extends CommandOpMode {
     TeleOpDrive drive;

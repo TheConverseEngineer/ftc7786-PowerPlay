@@ -1,7 +1,8 @@
-package org.firstinspires.ftc.teamcode.opmodes;
+package org.firstinspires.ftc.teamcode.archive.opmodes;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -9,16 +10,16 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
-import org.firstinspires.ftc.teamcode.drive.DriveConstants;
+import org.firstinspires.ftc.teamcode.archive.drive.DriveConstants;
 import org.firstinspires.ftc.teamcode.subsystems.arm.Arm;
 import org.firstinspires.ftc.teamcode.subsystems.elevator.Elevator;
 import org.firstinspires.ftc.teamcode.subsystems.elevator.ElevatorConstants;
 import org.firstinspires.ftc.teamcode.subsystems.gripper.Gripper;
-import org.firstinspires.ftc.teamcode.utils.MathUtils;
 
 @Config
-@TeleOp(name = "Standard TeleOp", group = "primary")
-public class StandardTeleOp extends LinearOpMode {
+@Disabled
+@TeleOp(name = "Standard TeleOp (g1++)", group = "primary")
+public class StandardTeleOp2 extends LinearOpMode {
 
     public static double armSpeed = 0.5;
 
@@ -40,6 +41,8 @@ public class StandardTeleOp extends LinearOpMode {
 
     private boolean g1ltoggle = false;
     private boolean g2rb = false, g2a = false, g2b = false, g2x = false, g2y = false;
+
+    private double headingOffset = 0;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -109,37 +112,37 @@ public class StandardTeleOp extends LinearOpMode {
         while (opModeIsActive() && !isStopRequested()) {
             double heading = (lf.getCurrentPosition() - re.getCurrentPosition()) / (DriveConstants.TRACK_DIAMETER * DriveConstants.TICKS_PER_INCH);
 
-            if (gamepad2.y && !g2y) {
+            if (gamepad1.y && !g2y) {
                 elevatorPos = 18.5;
                 armPos = 500;
                 g2y = true;
                 elevator.goToPosition(elevatorPos);
                 arm.setTargetPos(armPos);
-            } else if (!gamepad2.y) g2y = false;
+            } else if (!gamepad1.y) g2y = false;
 
-            if (gamepad2.b && !g2b) {
+            if (gamepad1.b && !g2b) {
                 elevatorPos = 7;
                 armPos = 600;
                 g2b = true;
                 elevator.goToPosition(elevatorPos);
                 arm.setTargetPos(armPos);
-            } else if (!gamepad2.b) g2b = false;
+            } else if (!gamepad1.b) g2b = false;
 
-            if (gamepad2.a && !g2a) {
+            if (gamepad1.a && !g2a) {
                 elevatorPos = 0;
                 armPos = 500;
                 g2a = true;
                 elevator.goToPosition(elevatorPos);
                 arm.setTargetPos(armPos);
-            } else if (!gamepad2.a) g2a = false;
+            } else if (!gamepad1.a) g2a = false;
 
-            if (gamepad2.x && !g2x) {
+            if (gamepad1.x && !g2x) {
                 elevatorPos = 0;
                 armPos = 0;
                 g2x = true;
                 elevator.goToPosition(elevatorPos);
                 arm.setTargetPos(armPos);
-            } else if (!gamepad2.x) g2x = false;
+            } else if (!gamepad1.x) g2x = false;
 
             if (gamepad1.left_bumper && !g1ltoggle) {
                 armClosed = !armClosed;
@@ -162,7 +165,9 @@ public class StandardTeleOp extends LinearOpMode {
                 arm.setTargetPos(armPos);
             }
 
-            drive(heading);
+            if (gamepad2.a && gamepad2.b) headingOffset = heading;
+
+            drive(heading - headingOffset);
 
             elevator.periodic();
             arm.periodic();

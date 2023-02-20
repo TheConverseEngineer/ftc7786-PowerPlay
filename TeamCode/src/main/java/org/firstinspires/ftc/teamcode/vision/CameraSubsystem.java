@@ -29,7 +29,7 @@ public class CameraSubsystem implements Subsystem {
             @Override
             public void onOpened() {
                 if (dashboardEnabled)
-                    camera.startStreaming(640,480, OpenCvCameraRotation.UPRIGHT);
+                    camera.startStreaming(640,480, OpenCvCameraRotation.SIDEWAYS_RIGHT);
                     FtcDashboard.getInstance().startCameraStream(camera, 15);
             }
 

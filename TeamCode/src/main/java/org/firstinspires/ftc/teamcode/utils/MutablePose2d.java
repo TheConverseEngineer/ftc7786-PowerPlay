@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.utils;
 
+import com.acmerobotics.roadrunner.geometry.Pose2d;
+
 /** A mutable version of Pose2d, based off of roadrunner's implementation */
 public class MutablePose2d {
     public double x, y, theta;
@@ -8,6 +10,10 @@ public class MutablePose2d {
         this.x = x;
         this.y = y;
         this.theta = theta;
+    }
+
+    public Pose2d asPose() {
+        return new Pose2d(x, y, theta);
     }
 
     /** Integrates local displacement over time and adds it to the pose */
@@ -26,7 +32,11 @@ public class MutablePose2d {
         this.theta += dTheta;
 
         // Wrap angle
-        while (this.theta <= -180) this.theta += 360;
-        while (this.theta > 180) this.theta -= 360;
+        this.theta = MathUtils.wrap(this.theta);
+    }
+
+    @Override
+    public String toString() {
+        return "(" + x + ", " + y + ", " + theta + ")";
     }
 }

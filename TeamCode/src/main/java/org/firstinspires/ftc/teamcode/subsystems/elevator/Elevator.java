@@ -10,16 +10,19 @@ public class Elevator implements Subsystem {
     private final LiftStateManager liftStateManager;
 
     private final DcMotor motor1, motor2;
+    private double lastRecordedPos;
 
     public Elevator(DcMotor liftMotorWithEncoder, DcMotor otherLiftMotor, double startPos) {
         liftStateManager = new LiftStateManager(startPos);
         motor1 = liftMotorWithEncoder;
         motor2 = otherLiftMotor;
+        lastRecordedPos = startPos;
     }
 
     @Override
     public void periodic() {
         double position = motor1.getCurrentPosition() / ElevatorConstants.TICKS_PER_INCH;
+        lastRecordedPos = position;
         if (position < ElevatorConstants.MIN_POS) {
             motor1.setPower(.25);
             motor2.setPower(.25);
@@ -35,5 +38,9 @@ public class Elevator implements Subsystem {
 
     public void goToPosition(double newPos) {
         this.liftStateManager.setNewTarget(newPos);
+    }
+
+    public double getPosition() {
+        return lastRecordedPos;
     }
 }

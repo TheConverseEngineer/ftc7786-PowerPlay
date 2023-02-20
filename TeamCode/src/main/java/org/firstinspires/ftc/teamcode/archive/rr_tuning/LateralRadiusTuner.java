@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.tuning;
+package org.firstinspires.ftc.teamcode.archive.rr_tuning;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -6,9 +6,12 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
+import org.firstinspires.ftc.teamcode.archive.drive.DriveConstants;
+import org.firstinspires.ftc.teamcode.drive.AutoDriveV3;
+
+@TeleOp(name = "lateral tuner", group = "rr")
 @Disabled
-@TeleOp(name = "track width", group = "tuning")
-public class TrackWidthTuner extends LinearOpMode {
+public class LateralRadiusTuner extends LinearOpMode {
     DcMotor right, left, rear, rm, lr;
 
     @Override
@@ -21,7 +24,7 @@ public class TrackWidthTuner extends LinearOpMode {
 
 
         right.setDirection(DcMotorSimple.Direction.REVERSE);
-        rear.setDirection(DcMotorSimple.Direction.REVERSE);
+        rm.setDirection(DcMotorSimple.Direction.REVERSE);
 
         left.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         right.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -36,24 +39,21 @@ public class TrackWidthTuner extends LinearOpMode {
         right.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rear.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        while (!gamepad1.a && opModeIsActive() && !isStopRequested()) {
+        while (opModeIsActive() && !isStopRequested()) {
             telemetry.addData("do", " 15 spins counter-clockwise");
             telemetry.addData("tracked dist", right.getCurrentPosition() - left.getCurrentPosition());
+            telemetry.addData("angle", (right.getCurrentPosition() - left.getCurrentPosition()) / (AutoDriveV3.TICKS_PER_INCH * AutoDriveV3.TRACK_DIAMETER));
             double power = gamepad1.right_stick_x;
             left.setPower(power);
             rm.setPower(-power);
             lr.setPower(power);
             rear.setPower(-power);
             telemetry.update();
-        }
 
-        telemetry.addData("track width", (right.getCurrentPosition() - left.getCurrentPosition()) / (30*Math.PI));
-        telemetry.addData("left", left.getCurrentPosition());
-        telemetry.addData("right", right.getCurrentPosition());
-        telemetry.addData("lateral radius", rear.getCurrentPosition() / (30*Math.PI));
-        telemetry.update();
-        while (!isStopRequested() && opModeIsActive()) {
-
+            double heading = (right.getCurrentPosition() - left.getCurrentPosition()) / (DriveConstants.TRACK_DIAMETER * DriveConstants.TICKS_PER_INCH);
+            if (Math.abs(heading) > 0.001)
+                telemetry.addData("lateral radius", rear.getCurrentPosition() / (heading));
+            telemetry.update();
         }
     }
 }

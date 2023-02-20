@@ -22,6 +22,7 @@ public class SequentialCommand implements Command {
 
     @Override
     public void loop() {
+        if (current >= commands.length) return;
         if (commands[current].isComplete()) {
             commands[current].end();
             current++;
@@ -32,7 +33,7 @@ public class SequentialCommand implements Command {
 
     @Override
     public void end() {
-        if (current <= commands.length) commands[current].end();
+        if (current <= commands.length) commands[current-1].end();
     }
 
     @Override

@@ -1,12 +1,16 @@
 package org.firstinspires.ftc.teamcode.tuning;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 
+import org.firstinspires.ftc.teamcode.subsystems.elevator.ElevatorConstants;
+
 // Tests all hardware maps to make sure everything is configured properly
+@Disabled
 @TeleOp(name = "HardwareMap Test", group = "default")
 public class HardwareMapTest extends LinearOpMode {
 
@@ -47,7 +51,7 @@ public class HardwareMapTest extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive() && !isStopRequested()) {
-            telemetry.addData("elevator pos", lift1.getCurrentPosition());
+            telemetry.addData("elevator pos", lift1.getCurrentPosition() / ElevatorConstants.TICKS_PER_INCH);
             telemetry.addData("arm pos", armMotor.getCurrentPosition());
             telemetry.addData("left odo pod", lf.getCurrentPosition());
             telemetry.addData("right odo pod", rr.getCurrentPosition());

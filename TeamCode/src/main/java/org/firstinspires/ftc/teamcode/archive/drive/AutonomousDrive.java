@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.drive;
+package org.firstinspires.ftc.teamcode.archive.drive;
 
 import androidx.annotation.Nullable;
 
@@ -11,15 +11,17 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 import org.firstinspires.ftc.teamcode.command.Command;
 import org.firstinspires.ftc.teamcode.command.Subsystem;
 import org.firstinspires.ftc.teamcode.utils.DashboardUtils;
+import org.firstinspires.ftc.teamcode.utils.MathUtils;
 import org.firstinspires.ftc.teamcode.utils.MutablePose2d;
 
 public class AutonomousDrive implements Subsystem {
 
     private final DcMotor leftFront, rightFront, leftRear, rightRear;
+    private final DcMotor rightEncoder;
     private final VoltageSensor voltageSensor;
     private final MutablePose2d pose;
 
-    private double oldLeftEncoderVal, oldRightEncoderVal, oldLateralEncoderVal;
+    private double oldLeftEncoderVal, oldRightEncoderVal, oldLateralEncoderVal, oldLeftRearEncoderVal;
 
     private final NanoClock timer;
     private double timerOffset;
@@ -40,12 +42,13 @@ public class AutonomousDrive implements Subsystem {
      * @param rightRear     The right rear dc motor
      * @param startPose     The robot's starting position
      */
-    public AutonomousDrive(VoltageSensor voltageSensor, DcMotor leftFront, DcMotor rightFront, DcMotor leftRear, DcMotor rightRear, Pose2d startPose) {
+    public AutonomousDrive(VoltageSensor voltageSensor, DcMotor leftFront, DcMotor rightFront, DcMotor leftRear, DcMotor rightRear, DcMotor rightEncoder, Pose2d startPose) {
         this.voltageSensor = voltageSensor;
         this.leftFront = leftFront;
         this.rightFront = rightFront;
         this.leftRear = leftRear;
         this.rightRear = rightRear;
+        this.rightEncoder = rightEncoder;
         this.pose = new MutablePose2d(startPose.getX(), startPose.getY(), startPose.getHeading());
 
         this.timer = NanoClock.system();
@@ -125,9 +128,21 @@ public class AutonomousDrive implements Subsystem {
         double dl = getLeftEncoderDelta() / DriveConstants.TICKS_PER_INCH;
         double dr = getRightEncoderDelta() / DriveConstants.TICKS_PER_INCH;
         double dLat = getLateralEncoderDelta() / DriveConstants.TICKS_PER_INCH;
-        pose.integrateLocalDisp((dl + dr)/2.0,
-                                dLat - (dr - dl)*(DriveConstants.LATERAL_RADIUS / DriveConstants.TRACK_DIAMETER),
-                            (dr - dl) / (DriveConstants.TRACK_DIAMETER));
+
+        // Use dead wheels
+        pose.integrateLocalDisp(
+            (dl + dr)/2.0,
+            -dLat + (dr - dl)*(DriveConstants.LATERAL_RADIUS / DriveConstants.TRACK_DIAMETER),
+            (dr - dl) / (DriveConstants.TRACK_DIAMETER));
+
+
+        // Use mecanum kinematics (only for virtual hardware)
+        /*double dlr = getLeftRearEncoderDelta() / DriveConstants.TICKS_PER_INCH;
+        pose.integrateLocalDisp(
+                (dl + dLat + dr + dlr)/4,
+                (-dl + dLat - dr + dlr)/4,
+                (-dl -dlr + dLat + dr) / (4*(DriveConstants.TRACK_DIAMETER+DriveConstants.LATERAL_RADIUS))
+        ); */
 
         if (currentSequence != null) {
             // Continues to "follow" trajectory even if it is complete
@@ -140,7 +155,7 @@ public class AutonomousDrive implements Subsystem {
             driveFieldCentric(
                     velocity.getX() + DriveConstants.kPLateral * (target.getX() - pose.x),
                     velocity.getY() + DriveConstants.kPLateral * (target.getY() - pose.y),
-                    velocity.getHeading() + DriveConstants.kPRotational * (target.getHeading() - pose.theta),
+                    velocity.getHeading() + DriveConstants.kPRotational * MathUtils.wrap(target.getHeading() - pose.theta),
                     acceleration.getX(),
                     acceleration.getY(),
                     acceleration.getHeading()
@@ -155,20 +170,27 @@ public class AutonomousDrive implements Subsystem {
         double newPos = leftFront.getCurrentPosition();
         double delta = newPos - oldLeftEncoderVal;
         oldLeftEncoderVal = newPos;
-        return delta;
+        return -delta;
     }
 
     private double getRightEncoderDelta() {
-        double newPos = rightRear.getCurrentPosition();
+        double newPos = rightEncoder.getCurrentPosition();
         double delta = newPos - oldRightEncoderVal;
         oldRightEncoderVal = newPos;
-        return delta;
+        return -delta;
     }
 
     private double getLateralEncoderDelta() {
         double newPos = rightFront.getCurrentPosition();
         double delta = newPos - oldLateralEncoderVal;
         oldLateralEncoderVal = newPos;
+        return delta;
+    }
+
+    private double getLeftRearEncoderDelta() {
+        double newPos = leftRear.getCurrentPosition();
+        double delta = newPos - oldLeftRearEncoderVal;
+        oldLeftRearEncoderVal = newPos;
         return delta;
     }
 
@@ -180,12 +202,16 @@ public class AutonomousDrive implements Subsystem {
 
             // Draw target pose
             DashboardUtils.drawRobot(target, "green", packet.fieldOverlay());
-            packet.put("target y velocity", currentSequence.velocity(time - timerOffset).getY());
+            packet.put("target x velocity", currentSequence.velocity(time - timerOffset).getX());
 
             // Log error
             packet.put("y error", target.getY() - pose.y);
             packet.put("x error", target.getX() - pose.x);
             packet.put("heading error", target.getHeading() - pose.theta);
+
+            packet.put("leftE", leftFront.getCurrentPosition());
+            packet.put("rightE", rightEncoder.getCurrentPosition());
+            packet.put("rearE", rightFront.getCurrentPosition());
         }
 
         // Draw robot
@@ -233,15 +259,15 @@ public class AutonomousDrive implements Subsystem {
      */
     private double[] mecanumIK(double x, double y, double w) {
         // First rotate the input so it correlates to the local frame instead of the global one
-        double x2 = Math.cos(pose.theta)*x + Math.sin(pose.theta)*y;
-        double y2 = Math.cos(pose.theta)*y - Math.sin(pose.theta)*x;
+        double x2 = Math.cos(pose.theta)*x + Math.sin(pose.theta)*-y;
+        double y2 = Math.cos(pose.theta)*-y - Math.sin(pose.theta)*x;
 
         // Now actually calculate and return the IK values
         return new double[]{
-                x2 - y2 * DriveConstants.LATERAL_MULTIPLIER - w * DriveConstants.TRACK_DIAMETER,
-                x2 + y2 * DriveConstants.LATERAL_MULTIPLIER + w * DriveConstants.TRACK_DIAMETER,
-                x2 + y2 * DriveConstants.LATERAL_MULTIPLIER - w * DriveConstants.TRACK_DIAMETER,
-                x2 - y2 * DriveConstants.LATERAL_MULTIPLIER + w * DriveConstants.TRACK_DIAMETER
+                -x2 - y2 * DriveConstants.LATERAL_MULTIPLIER - w * DriveConstants.TRACK_DIAMETER,
+                -x2 + y2 * DriveConstants.LATERAL_MULTIPLIER + w * DriveConstants.TRACK_DIAMETER,
+                -x2 + y2 * DriveConstants.LATERAL_MULTIPLIER - w * DriveConstants.TRACK_DIAMETER,
+                -x2 - y2 * DriveConstants.LATERAL_MULTIPLIER + w * DriveConstants.TRACK_DIAMETER
         };
     }
 

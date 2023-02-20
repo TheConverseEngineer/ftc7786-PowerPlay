@@ -2,18 +2,11 @@ package org.firstinspires.ftc.teamcode.command;
 
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.Gamepad;
 
 import java.util.List;
 
 /** OpMode template to help simplify the creation of Command-Based code */
 public abstract class CommandOpMode extends LinearOpMode {
-
-    /** Represents the prior state of gamepad 1 (useful for debouncing) */
-    protected Gamepad _gamepad1 = new Gamepad();
-
-    /** Represents the prior state of gamepad 2 (useful for debouncing) */
-    protected Gamepad _gamepad2 = new Gamepad();
 
     @Override
     public final void runOpMode() {
@@ -27,8 +20,6 @@ public abstract class CommandOpMode extends LinearOpMode {
         for (LynxModule hub : allHubs) hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
 
         waitForStart();
-        gamepad1.copy(_gamepad1);
-        gamepad2.copy(_gamepad2);
 
         start(master);
 
@@ -36,10 +27,7 @@ public abstract class CommandOpMode extends LinearOpMode {
             for (LynxModule hub : allHubs) hub.clearBulkCache();
             loop(master);
             master.run();
-            telemetry.update();
-
-            gamepad1.copy(_gamepad1);
-            gamepad2.copy(_gamepad2);
+            //telemetry.update();
         }
         end();
         master.reset();

@@ -59,7 +59,7 @@ class AprilTagPipeline extends OpenCvPipeline {
             }
         }
 
-        Imgproc.putText(input, " Size: " + detections.size(), new Point(25, 25), Imgproc.FONT_HERSHEY_SCRIPT_SIMPLEX, 1, new Scalar(255, 255, 255), 4);
+        Imgproc.putText(input, (detections.size() > 0) ? ("" + detections.get(0).id) : ("None"), new Point(25, 25), Imgproc.FONT_HERSHEY_SIMPLEX, 1, new Scalar(255, 255, 255), 4);
 
 
         return input;

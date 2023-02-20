@@ -1,15 +1,13 @@
 package org.firstinspires.ftc.teamcode.subsystems.arm;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.command.Subsystem;
 import org.firstinspires.ftc.teamcode.utils.MathUtils;
 
-public class Arm implements Subsystem {
+public class Arm2 implements Subsystem {
     private final DcMotor armMotor;
-    private final Servo armServo, flipServo;
 
     private final ElapsedTime timer;
 
@@ -22,19 +20,13 @@ public class Arm implements Subsystem {
     private double lastError = 0;
     private double lastTime;
 
-    private boolean flipped = false;
-
     /** Assumes that the arm is originally facing forward
      *
      * @param armMotor      The dc motor controlling the arm
-     * @param armServo      The four-bar servo
-     * @param flipServo     The servo that connects the gripper to the arm
      * @param armStartPosition  The default starting position of the arm
      */
-    public Arm(DcMotor armMotor, Servo armServo, Servo flipServo, double armStartPosition) {
+    public Arm2(DcMotor armMotor, double armStartPosition) {
         this.armMotor = armMotor;
-        this.armServo = armServo;
-        this.flipServo = flipServo;
 
         timer = new ElapsedTime();
         timer.reset();
@@ -44,22 +36,11 @@ public class Arm implements Subsystem {
     public void setTargetPos(double armMotorTargetPos) {
         // Set PID I value to zero when the motor target changes
         lastI = 0;
-        this.armMotorTargetPos = MathUtils.clamp(armMotorTargetPos, ArmConstants.ARM_MIN_POS, ArmConstants.ARM_MAX_POS / 2);
-        if (flipped)
-            this.armMotorTargetPos = ArmConstants.ARM_MAX_POS - this.armMotorTargetPos;
+        this.armMotorTargetPos = MathUtils.clamp(armMotorTargetPos, ArmConstants.ARM_MIN_POS, ArmConstants.ARM_MAX_POS);
     }
 
     public double getTargetPos() {
         return this.armMotorTargetPos;
-    }
-
-    /** Flips the arm around the robot */
-    public void flipSide() {
-        armServo.setPosition(flipped ? ArmConstants.FOUR_BAR_SERVO_FORWARD : ArmConstants.FOUR_BAR_SERVO_REVERSE);
-        flipServo.setPosition(flipped ? ArmConstants.FLIP_SERVO_REVERSE : ArmConstants.FLIP_SERVO_FORWARD);
-        flipped = !flipped;
-        this.armMotorTargetPos = ArmConstants.ARM_MAX_POS - this.armMotorTargetPos;
-        lastI = 0;
     }
 
 
@@ -73,18 +54,22 @@ public class Arm implements Subsystem {
     }
 
     public void loopArmPID(){
+        if (armMotorTargetPos < 10 && armPos < 300 && armPos > 50) {
+            armMotor.setPower(ArmConstants.MIN_END_SPEED);
+            return;
+        }
         double error = armMotorTargetPos - armPos;
         double deltaTime = timer.seconds()-lastTime;
         //If error changes sign set I to zero
         if(error*lastError<=0) lastI = 0;
         else lastI += error*deltaTime;
 
-        double IVal = MathUtils.clamp(lastI, -ArmConstants.I_CAP, ArmConstants.I_CAP);
+        double IVal = MathUtils.clamp(ArmConstants.I_PID*lastI, -ArmConstants.I_CAP, ArmConstants.I_CAP);
         double DVal = (error-lastError)/deltaTime;
-        double output = (error*ArmConstants.P_PID_UP) + (IVal*ArmConstants.I_PID) + (DVal*ArmConstants.D_PID) + (flipped?-ArmConstants.STATIC_PID:ArmConstants.STATIC_PID);
+        double output = (error* ((armPos<=685) ? ((error>=0)?ArmConstants.P_PID_UP:ArmConstants.P_PID_DOWN) : ((error>=0)?ArmConstants.P_PID_DOWN:ArmConstants.P_PID_UP))) + (IVal) + (DVal*ArmConstants.D_PID);
 
         lastError = error;
         lastTime += deltaTime;
-        armMotor.setPower(output);
+        armMotor.setPower(MathUtils.clamp(output + ((armPos > 700)?-ArmConstants.STATIC_PID:((armPos < 600)?ArmConstants.STATIC_PID:0)), ArmConstants.MIN_ARM_POWER, ArmConstants.MAX_ARM_POWER));
     }
 }

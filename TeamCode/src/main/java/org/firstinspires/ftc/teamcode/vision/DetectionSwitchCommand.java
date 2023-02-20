@@ -19,27 +19,27 @@ public class DetectionSwitchCommand implements Command {
     public void init() {
         status.lock();
         switch (status.getPos()) {
-            case LEFT: left.init();
-            case CENTER: center.init();
-            case RIGHT: right.init();
+            case LEFT: left.init(); break;
+            case CENTER: center.init(); break;
+            case RIGHT: right.init(); break;
         }
     }
 
     @Override
     public void loop() {
         switch (status.getPos()) {
-            case LEFT: left.loop();
-            case CENTER: center.loop();
-            case RIGHT: right.loop();
+            case LEFT: left.loop(); break;
+            case CENTER: center.loop(); break;
+            case RIGHT: right.loop(); break;
         }
     }
 
     @Override
     public void end() {
         switch (status.getPos()) {
-            case LEFT: left.end();
-            case CENTER: center.end();
-            case RIGHT: right.end();
+            case LEFT: left.end(); break;
+            case CENTER: center.end(); break;
+            case RIGHT: right.end(); break;
         }
     }
 
